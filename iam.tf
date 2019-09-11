@@ -25,12 +25,12 @@ data "aws_iam_policy_document" "transfer_server_to_cloudwatch_assume_policy" {
 }
 
 resource "aws_iam_role" "transfer_server_role" {
-  name               = "transfer_server_role"
+  name               = "${var.transfer_server_name}-transfer_server_role"
   assume_role_policy = "${data.aws_iam_policy_document.transfer_server_assume_role.0.json}"
 }
 
 resource "aws_iam_role_policy" "transfer_server_to_cloudwatch_policy" {
-  name   = "transfer_server_to_cloudwatch_policy"
+  name   = "${var.transfer_server_name}-transfer_server_to_cloudwatch_policy"
   role   = "${aws_iam_role.transfer_server_role.name}"
   policy = "${data.aws_iam_policy_document.transfer_server_to_cloudwatch_assume_policy.0.json}"
 }
