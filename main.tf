@@ -1,9 +1,21 @@
-module "s3-bucket" {
-  source        = "git::https://github.com/felipefrizzo/terraform-aws-s3-bucket.git?ref=master"
-  bucket_name   = var.bucket_name
+resource "aws_s3_bucket" "s3_bucket" {
+  bucket        = var.bucket_name
+  acl           = var.public_bucket ? "public-read" : "private"
   force_destroy = var.force_destroy
-  public        = var.public_bucket
-  versioned     = var.versioned
+
+  versioning {
+    enabled = var.versioned
+  }
+
+  cors_rule {
+    allowed_headers = var.cors_allowed_headers
+    allowed_methods = var.cors_allowed_methods
+    allowed_origins = [var.cors_allowed_origins]
+    expose_headers  = var.cors_expose_headers
+    max_age_seconds = var.cors_max_age_seconds
+  }
+
+  tags = var.bucket_tags
 }
 
 resource "aws_transfer_server" "transfer_server" {
@@ -19,7 +31,7 @@ resource "aws_transfer_user" "transfer_server_user" {
   server_id      = aws_transfer_server.transfer_server.id
   user_name      = var.transfer_server_user_name
   role           = aws_iam_role.transfer_server_role.arn
-  home_directory = "/${module.s3-bucket.s3_bucket_id}"
+  home_directory = "/${aws_s3_bucket.s3_bucket.id}"
 }
 
 resource "aws_transfer_ssh_key" "transfer_server_ssh_key" {
@@ -27,4 +39,3 @@ resource "aws_transfer_ssh_key" "transfer_server_ssh_key" {
   user_name = aws_transfer_user.transfer_server_user.user_name
   body      = var.transfer_server_ssh_key
 }
-
